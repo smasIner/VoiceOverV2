@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Episodes for {{ anime.title }}</h2>
+        <div class="header-actions">
+            <button class="btn primary" onclick="document.getElementById('add-episode-modal').style.display='block'">Add Episode</button>
+            <a href="{{ url_for('characters', anime_id=anime.id) }}" class="btn">Characters</a>
+            <a href="{{ url_for('index') }}" class="btn">Back to Anime List</a>
+        </div>
+    </section>
+
+    <section class="episode-list">
+        {% for episode in episodes %}
+            <div class="episode-card">
+                <div class="episode-info">
+                    <h3>
+                        {% if episode.number %}
+                            <span class="episode-number">{{ episode.number }}.</span>
+                        {% endif %}
+                        <a href="{{ url_for('episode_detail', episode_id=episode.id) }}">{{ episode.title }}</a>
+                    </h3>
+                    <p>Release Date: {{ episode.release_date }}</p>
+                    {% if episode.synopsis %}
+                        <p class="episode-synopsis">{{ episode.synopsis|truncate(100) }}</p>
+                    {% endif %}
+                    <div class="card-actions">
+                        <button class="btn edit" onclick="openEditEpisodeModal({{ episode.id }}, '{{ episode.title|replace("'", "\\'") }}', '{{ episode.release_date }}', '{{ episode.number }}', '{{ episode.synopsis|default('')|replace("\n", " ")|replace("\r", " ")|replace("'", "\\'") }}')">Edit</button>
+                        <button class="btn delete" onclick="confirmDelete('episode', {{ episode.id }})">Delete</button>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="no-items">No episodes found. Add one to get started!</p>
+        {% endfor %}
+    </section>
+
+    <!-- add episode -->
+    <div id="add-episode-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('add-episode-modal').style.display='none'">&times;</span>
+            <h2>Add New Episode</h2>
+            <form action="{{ url_for('add_episode') }}" method="post">
+                <input type="hidden" name="anime_id" value="{{ anime.id }}">
+                <div class="form-group">
+                    <label for="number">Episode Number (optional):</label>
+                    <input type="number" id="number" name="number" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="release_date">Release Date:</label>
+                    <input type="date" id="release_date" name="release_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="synopsis">Synopsis (optional):</label>
+                    <textarea id="synopsis" name="synopsis" rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('add-episode-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">OK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- editepisode modla -->
+    <div id="edit-episode-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('edit-episode-modal').style.display='none'">&times;</span>
+            <h2>Edit Episode</h2>
+            <form id="edit-episode-form" action="" method="post">
+                <div class="form-group">
+                    <label for="edit-number">Episode Number (optional):</label>
+                    <input type="number" id="edit-number" name="number" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="edit-title">Title:</label>
+                    <input type="text" id="edit-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-release_date">Release Date:</label>
+                    <input type="date" id="edit-release_date" name="release_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-synopsis">Synopsis (optional):</label>
+                    <textarea id="edit-synopsis" name="synopsis" rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('edit-episode-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">OK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- confirm delete modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this episode? This action cannot be undone.</p>
+            <div class="form-actions">
+                <button class="btn" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+                <a id="confirm-delete-btn" href="#" class="btn delete">Delete</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openEditEpisodeModal(id, title, releaseDate, number, synopsis) {
+            document.getElementById('edit-episode-form').action = "/episode/edit/" + id;
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-release_date').value = releaseDate;
+            document.getElementById('edit-number').value = number || '';
+            document.getElementById('edit-synopsis').value = synopsis || '';
+            document.getElementById('edit-episode-modal').style.display = 'block';
+        }
+
+        function confirmDelete(type, id) {
+            document.getElementById('confirm-delete-btn').href = "/" + type + "/delete/" + id;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+    </script>
+{% endblock %}

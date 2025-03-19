@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Search Results</h2>
+        <a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+    </section>
+
+    <section class="search-results">
+        <div class="anime-preview">
+            <div class="anime-card">
+                <div class="image-container">
+                    <img src="{{ anime.coverImage }}" alt="{{ anime.title }}">
+                </div>
+                <div class="anime-info">
+                    <h3>{{ anime.title }}</h3>
+                    <p>{{ anime.description }}</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('import_anime') }}" method="post" class="import-form">
+                <input type="hidden" name="title" value="{{ anime.title }}">
+                <input type="hidden" name="description" value="{{ anime.description }}">
+                <input type="hidden" name="image_url" value="{{ anime.coverImage }}">
+                <input type="hidden" name="external_id" value="{{ anime.id }}">
+                <input type="hidden" name="character_count" value="{{ anime.characters|length }}">
+
+                {% for character in anime.characters %}
+                    <input type="hidden" name="character_name_{{ loop.index0 }}" value="{{ character.name }}">
+                    <input type="hidden" name="character_image_{{ loop.index0 }}" value="{{ character.image }}">
+                    <input type="hidden" name="character_description_{{ loop.index0 }}" value="{{ character.description }}">
+                    <input type="hidden" name="character_id_{{ loop.index0 }}" value="{{ character.id }}">
+                {% endfor %}
+
+                <input type="hidden" name="episode_count" value="{{ episodes|length }}">
+
+                {% for episode in episodes %}
+                    <input type="hidden" name="episode_title_{{ loop.index0 }}" value="{{ episode.title }}">
+                    <input type="hidden" name="episode_number_{{ loop.index0 }}" value="{{ episode.number }}">
+                    <input type="hidden" name="episode_synopsis_{{ loop.index0 }}" value="{{ episode.synopsis }}">
+                    <input type="hidden" name="episode_date_{{ loop.index0 }}" value="{{ episode.airdate }}">
+                {% endfor %}
+
+                <button type="submit" class="btn primary">Import Anime with {{ anime.characters|length }} Characters and {{ episodes|length }} Episodes</button>
+            </form>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="openTab(event, 'characters-tab')">Characters ({{ anime.characters|length }})</button>
+                <button class="tab-btn" onclick="openTab(event, 'episodes-tab')">Episodes ({{ episodes|length }})</button>
+            </div>
+
+            <div id="characters-tab" class="tab-content active">
+                <div class="character-grid">
+                    {% for character in anime.characters %}
+                        <div class="import-character-card">
+                            <div class="import-character-image-container">
+                                <img src="{{ character.image }}" alt="{{ character.name }}" class="import-character-image">
+                            </div>
+                            <div class="import-character-info">
+                                <h3>{{ character.name }}</h3>
+                                <div class="character-description-container" style="height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; background-color: #f9f9f9; border-radius: 4px;">
+                                    <p class="character-description">{{ character.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="no-items">No characters found for this anime.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="episodes-tab" class="tab-content">
+                <div class="episode-list">
+                    {% for episode in episodes %}
+                        <div class="episode-card">
+                            <div class="episode-info">
+                                <h3>{{ episode.number }}. {{ episode.title }}</h3>
+                                <p>{{ episode.synopsis }}</p>
+                                <p class="airdate">Air Date: {{ episode.airdate }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="no-items">No episodes found for this anime.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function openTab(evt, tabName) {
+            // hide all tab content
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            // remove active class from all tab buttons
+            var tablinks = document.getElementsByClassName("tab-btn");
+            for (var i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+
+            // show the current tab and add active class to the button
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+{% endblock %}

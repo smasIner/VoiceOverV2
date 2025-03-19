@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <section class="page-header">
+      <h2>Characters for {{ anime.title }}</h2>
+      <div class="header-actions">
+          <a href="{{ url_for('add_character', anime_id=anime.id) }}" class="btn primary">Add Character</a>
+          <a href="{{ url_for('episodes', anime_id=anime.id) }}" class="btn">Back to Episodes</a>
+      </div>
+  </section>
+
+  <section class="character-list">
+      {% for character in characters %}
+          <div class="character-card">
+              <div class="character-image-container">
+                  <img src="{{ character.image_url }}" alt="{{ character.name }}" class="character-image">
+              </div>
+              <div class="character-info">
+                  <div class="character-name-section">
+                      <h4>{{ character.name }}</h4>
+                      {% if character.voice_actor_name %}
+                          <p class="voice-actor">Voice Actor: {{ character.voice_actor_name }}</p>
+                      {% else %}
+                          <p class="voice-actor">No voice actor assigned</p>
+                      {% endif %}
+                  </div>
+                  <div class="character-description-container">
+                      <p class="character-description">{{ character.description }}</p>
+                  </div>
+                  <div class="character-actions">
+                      <a href="{{ url_for('edit_character', id=character.id) }}" class="btn-small edit">Edit</a>
+                      <button class="btn-small delete" onclick="confirmDelete('character', {{ character.id }}, '{{ character.name }}')">Delete</button>
+                  </div>
+              </div>
+          </div>
+      {% else %}
+          <p class="no-items">No characters found. Add one to get started!</p>
+      {% endfor %}
+  </section>
+{% endblock %}
+

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Assign Character to Episode</h2>
+        <a href="{{ url_for('episode_detail', episode_id=episode.id) }}" class="btn">Back to Episode</a>
+    </section>
+
+    <section class="form-container">
+        <form action="{{ url_for('assign_character', episode_id=episode.id) }}" method="post">
+            <div class="form-group">
+                <label for="character_id">Character:</label>
+                <select id="character_id" name="character_id" required>
+                    <option value="">-- Select Character --</option>
+                    {% for character in characters %}
+                        <option value="{{ character.id }}">{{ character.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="total_lines">Total Voice Lines:</label>
+                <input type="number" id="total_lines" name="total_lines" min="1" required>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('episode_detail', episode_id=episode.id) }}" class="btn">Cancel</a>
+                <button type="submit" class="btn primary">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

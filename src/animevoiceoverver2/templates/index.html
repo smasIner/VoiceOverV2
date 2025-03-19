@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Anime List</h2>
+        <div class="header-actions">
+            <button class="btn primary" onclick="document.getElementById('add-anime-modal').style.display='block'">Add Anime</button>
+            <button class="btn" onclick="document.getElementById('search-anime-modal').style.display='block'">Search & Import Anime</button>
+        </div>
+    </section>
+
+    <section class="anime-list">
+    {% for anime in animes %}
+        <div class="anime-card">
+            <div class="image-container">
+                <img src="{{ anime.image_url }}" alt="{{ anime.title }}">
+            </div>
+            <div class="anime-info">
+                <h3><a href="{{ url_for('episodes', anime_id=anime.id) }}">{{ anime.title }}</a></h3>
+                <div class="anime-description-container">
+                    <p class="anime-description">{{ anime.description }}</p>
+                </div>
+                <div class="card-actions">
+                      <a href="{{ url_for('edit_anime', id=anime.id) }}" class="btn-small edit">Edit</a>
+                      <button class="btn-small delete" onclick="confirmDelete('anime', {{ anime.id }})">Delete</button>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p class="no-items">No anime found. Add one to get started!</p>
+    {% endfor %}
+    </section>
+
+    <!-- anime modal -->
+    <div id="add-anime-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('add-anime-modal').style.display='none'">&times;</span>
+            <h2>Add New Anime</h2>
+            <form action="{{ url_for('add_anime') }}" method="post">
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="image_url">Image URL (optional):</label>
+                    <input type="text" id="image_url" name="image_url" placeholder="Leave empty for default image">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('add-anime-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">OK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- search modal #TODO -->
+    <div id="search-anime-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('search-anime-modal').style.display='none'">&times;</span>
+            <h2>Search for Anime</h2>
+            <form action="{{ url_for('search_anime') }}" method="post">
+                <div class="form-group">
+                    <label for="search_title">Anime Title:</label>
+                    <input type="text" id="search_title" name="search_title" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('search-anime-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--
+    <div id="edit-anime-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('edit-anime-modal').style.display='none'">&times;</span>
+            <h2>Edit Anime</h2>
+            <form id="edit-anime-form" action="" method="post">
+                <div class="form-group">
+                    <label for="edit-title">Title:</label>
+                    <input type="text" id="edit-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-description">Description:</label>
+                    <textarea id="edit-description" name="description" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-image_url">Image URL (optional):</label>
+                    <input type="text" id="edit-image_url" name="image_url" placeholder="Leave empty for default image">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('edit-anime-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">OK</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div class="form-actions">
+                <button class="btn" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+                <a id="confirm-delete-btn" href="#" class="btn delete">Delete</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openEditAnimeModal(id, title, description, imageUrl) {
+            document.getElementById('edit-anime-form').action = "/anime/edit/" + id;
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-description').value = description;
+            document.getElementById('edit-image_url').value = imageUrl;
+            document.getElementById('edit-anime-modal').style.display = 'block';
+        }
+
+        function confirmDelete(type, id) {
+            document.getElementById('confirm-delete-btn').href = "/" + type + "/delete/" + id;
+            document.getElementById('delete-modal').style.display = 'block';
+        }
+    </script>
+{% endblock %}

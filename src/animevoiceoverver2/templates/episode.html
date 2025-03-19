@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>
+            {% if episode.number %}
+                <span class="episode-number">{{ episode.number }}.</span>
+            {% endif %}
+            {{ episode.title }}
+        </h2>
+        <div class="header-actions">
+            <a href="{{ url_for('episodes', anime_id=episode.anime_id) }}" class="btn">Back to Episodes</a>
+            <a href="{{ url_for('edit_episode', id=episode.id) }}" class="btn edit">Edit Episode</a>
+        </div>
+    </section>
+
+    <section class="episode-details">
+        <div class="episode-info-card">
+            <h3>Episode Details</h3>
+            <p><strong>Anime:</strong> {{ episode.anime_title }}</p>
+            <p><strong>Release Date:</strong> {{ episode.release_date }}</p>
+            {% if episode.synopsis %}
+                <div class="episode-synopsis">
+                    <h4>Synopsis</h4>
+                    <p>{{ episode.synopsis }}</p>
+                </div>
+            {% endif %}
+
+            <div class="subtitle-stats">
+                <h4>Subtitle Progress</h4>
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ (completed_count / subtitle_count * 100) if subtitle_count > 0 else 0 }}%"></div>
+                </div>
+                <p><span id="completed-count">{{ completed_count }}</span> / <span id="total-count">{{ subtitle_count }}</span> lines completed</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="characters-section">
+        <h3>Characters in this Episode</h3>
+        <div class="character-list">
+            {% for character in participating_characters %}
+                <div class="character-card">
+                    <div class="character-image-container">
+                        <img src="{{ character.image_url }}" alt="{{ character.name }}" class="character-image">
+                    </div>
+                    <div class="character-info">
+                        <div class="character-name-section">
+                            <h4>{{ character.name }}</h4>
+                            <p class="voice-actor">{{ character.voice_actor_name or 'No voice actor' }}</p>
+                        </div>
+                        <div class="character-description-container">
+                            <p class="character-description">{{ character.description }}</p>
+                        </div>
+                        <div class="character-actions">
+                            <button class="btn-small delete" onclick="confirmDelete('character', {{ character.id }}, '{{ character.name }}', '{{ url_for('remove_character_from_episode', episode_id=episode.id, character_id=character.id) }}')">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="no-items">No characters assigned to this episode yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="add-character-form">
+            <h4>Add Character to Episode</h4>
+            <form action="{{ url_for('add_character_to_episode', episode_id=episode.id) }}" method="post">
+                <div class="form-group">
+                    <select name="character_id" required>
+                        <option value="">-- Select Character --</option>
+                        {% for character in all_characters %}
+                            {% if character.id not in participating_character_ids %}
+                                <option value="{{ character.id }}">{{ character.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn primary">Add Character</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="subtitle-upload">
+        <h3>Upload Subtitles</h3>
+        <form action="{{ url_for('upload_subtitles', episode_id=episode.id) }}" method="post" enctype="multipart/form-data" class="upload-form">
+            <div class="form-group">
+                <label for="subtitle_file">SRT File:</label>
+                <input type="file" id="subtitle_file" name="subtitle_file" accept=".srt" required>
+            </div>
+            <div class="form-group">
+                <label for="language">Source Language:</label>
+                <select id="language" name="language">
+                    <option value="en">English (will translate to Russian)</option>
+                    <option value="ru">Russian (no translation)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn primary">Upload and Process</button>
+        </form>
+    </section>
+
+    <section class="subtitle-list">
+        <h3>Subtitles</h3>
+        {% if subtitles %}
+            <div class="table-responsive">
+                <table class="subtitle-table">
+                    <thead>
+                        <tr>
+                            <th class="time-col">Start</th>
+                            <th class="time-col">End</th>
+                            <th class="phrase-col">English Phrase</th>
+                            <th class="phrase-col">Russian Phrase</th>
+                            <th>Character</th>
+                            <th>Voice Actor</th>
+                            <th class="status-col">Status</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subtitle in subtitles %}
+                            <tr id="subtitle-row-{{ subtitle.id }}" class="{{ 'completed' if subtitle.is_completed else '' }}">
+                                <td class="time-col">{{ subtitle.start_time }}</td>
+                                <td class="time-col">{{ subtitle.end_time }}</td>
+                                <td class="phrase-col">{{ subtitle.english_phrase }}</td>
+                                <td class="phrase-col">{{ subtitle.russian_phrase }}</td>
+                                <td id="character-name-{{ subtitle.id }}">{{ subtitle.character_name or 'Not assigned' }}</td>
+                                <td id="voice-actor-{{ subtitle.id }}">{{ subtitle.voice_actor_name or 'None' }}</td>
+                                <td class="status-col">
+                                    <input type="checkbox" class="completion-checkbox" data-subtitle-id="{{ subtitle.id }}"
+                                           {{ 'checked' if subtitle.is_completed else '' }}>
+                                </td>
+                                <td class="actions-col">
+                                    <button class="btn-small" onclick="openAssignCharacterModal({{ subtitle.id }})">Assign</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-items">No subtitles found for this episode. Upload an SRT file to get started.</p>
+        {% endif %}
+    </section>
+
+    <div id="assign-character-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('assign-character-modal').style.display='none'">&times;</span>
+            <h2>Assign Character to Subtitle</h2>
+            <form id="assign-character-form" action="" method="post">
+                <div class="form-group">
+                    <label for="character_id">Character:</label>
+                    <select id="character_id" name="character_id" required>
+                        <option value="">-- Select Character --</option>
+                        {% for character in participating_characters %}
+                            <option value="{{ character.id }}">{{ character.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="document.getElementById('assign-character-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn primary">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // store the current subtitle ID for the assign character modal
+        let currentSubtitleId = null;
+
+        function openAssignCharacterModal(subtitleId) {
+            currentSubtitleId = subtitleId;
+            document.getElementById('assign-character-form').action = "/subtitle/" + subtitleId + "/assign_character";
+            document.getElementById('assign-character-modal').style.display = 'block';
+        }
+
+        // handle form submission with AJAX
+        document.getElementById('assign-character-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response  'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the character and voice actor cells
+                    document.getElementById('character-name-' + currentSubtitleId).textContent = data.character_name;
+                    document.getElementById('voice-actor-' + currentSubtitleId).textContent = data.voice_actor_name;
+
+                    // Close the modal
+                    document.getElementById('assign-character-modal').style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // handle checkbox clicks with AJAX
+        document.querySelectorAll('.completion-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const subtitleId = this.dataset.subtitleId;
+
+                fetch('/subtitle/' + subtitleId + '/toggle_completion', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // update the row class based on completion status
+                        const row = document.getElementById('subtitle-row-' + subtitleId);
+                        if (data.is_completed) {
+                            row.classList.add('completed');
+                        } else {
+                            row.classList.remove('completed');
+                        }
+
+                        // update the completion count
+                        document.getElementById('completed-count').textContent = data.completed_count;
+
+                        // update progress bar
+                        const totalCount = parseInt(document.getElementById('total-count').textContent);
+                        const progressBar = document.querySelector('.progress');
+                        if (totalCount > 0) {
+                            progressBar.style.width = (data.completed_count / totalCount * 100) + '%';
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+{% endblock %}

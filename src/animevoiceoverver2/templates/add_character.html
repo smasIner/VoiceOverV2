@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Add New Character for {{ anime.title }}</h2>
+        <a href="{{ url_for('characters', anime_id=anime.id) }}" class="btn">Back to Characters</a>
+    </section>
+
+    <section class="form-container">
+        <form action="{{ url_for('add_character', anime_id=anime.id) }}" method="post">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="image_url">Image URL (optional):</label>
+                <input type="text" id="image_url" name="image_url" placeholder="Leave empty for default image">
+            </div>
+            <div class="form-group">
+                <label for="voice_actor_id">Voice Actor (optional):</label>
+                <select id="voice_actor_id" name="voice_actor_id">
+                    <option value="">-- Select Voice Actor --</option>
+                    {% for actor in voice_actors %}
+                        <option value="{{ actor.id }}">{{ actor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('characters', anime_id=anime.id) }}" class="btn">Cancel</a>
+                <button type="submit" class="btn primary">Save</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

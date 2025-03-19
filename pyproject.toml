@@ -1,0 +1,29 @@
+[project]
+name = "animevoiceoverver2"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "smasIner",email = "89355987+smasIner@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask (>=3.1.0,<4.0.0)",
+    "flask-wtf (>=1.2.2,<2.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)",
+    "requests (>=2.32.3,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "animevoiceoverver2", from = "src"}]
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+black = "^25.1.0"
+flake8 = "^7.1.2"
+pytest-flask = "^1.3.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

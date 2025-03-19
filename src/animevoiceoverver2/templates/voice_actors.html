@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="page-header">
+        <h2>Voice Actors</h2>
+        <a href="{{ url_for('add_voice_actor') }}" class="btn primary">Add Voice Actor</a>
+    </section>
+
+    <section class="actor-list">
+        {% for actor in actors %}
+            <div class="actor-card">
+                <img src="{{ actor.image_url }}" alt="{{ actor.name }}">
+                <div class="actor-info">
+                    <h3>{{ actor.name }}</h3>
+                    <div class="card-actions">
+                        <a href="{{ url_for('edit_voice_actor', id=actor.id) }}" class="btn edit">Edit</a>
+                        <a href="{{ url_for('delete_voice_actor', id=actor.id) }}" class="btn delete">Delete</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <p class="no-items">No voice actors found. Add one to get started!</p>
+        {% endfor %}
+    </section>
+{% endblock %}
