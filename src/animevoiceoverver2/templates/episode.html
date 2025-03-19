@@ -164,80 +164,82 @@
     </div>
 
     <script>
-        // store the current subtitle ID for the assign character modal
-        let currentSubtitleId = null;
+    let currentSubtitleId = null;
 
-        function openAssignCharacterModal(subtitleId) {
-            currentSubtitleId = subtitleId;
-            document.getElementById('assign-character-form').action = "/subtitle/" + subtitleId + "/assign_character";
-            document.getElementById('assign-character-modal').style.display = 'block';
-        }
+    function openAssignCharacterModal(subtitleId) {
+        currentSubtitleId = subtitleId;
+        document.getElementById('assign-character-form').action = "/subtitle/" + subtitleId + "/assign_character";
+        document.getElementById('assign-character-modal').style.display = 'block';
+    }
 
-        // handle form submission with AJAX
-        document.getElementById('assign-character-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+    // Handle form submission with AJAX
+    document.getElementById('assign-character-form').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            const formData = new FormData(this);
+        const formData = new FormData(this);
 
-            fetch(this.action, {
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update the character and voice actor cells
+                document.getElementById('character-name-' + currentSubtitleId).textContent = data.character_name;
+                document.getElementById('voice-actor-' + currentSubtitleId).textContent = data.voice_actor_name;
+
+                // Close the modal
+                document.getElementById('assign-character-modal').style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Handle checkbox clicks with AJAX
+    document.querySelectorAll('.completion-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const subtitleId = this.dataset.subtitleId;
+
+            fetch('/subtitle/' + subtitleId + '/toggle_completion', {
                 method: 'POST',
-                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response  'XMLHttpRequest'
                 }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update the character and voice actor cells
-                    document.getElementById('character-name-' + currentSubtitleId).textContent = data.character_name;
-                    document.getElementById('voice-actor-' + currentSubtitleId).textContent = data.voice_actor_name;
+                    // Update the row class based on completion status
+                    const row = document.getElementById('subtitle-row-' + subtitleId);
+                    if (data.is_completed) {
+                        row.classList.add('completed');
+                    } else {
+                        row.classList.remove('completed');
+                    }
 
-                    // Close the modal
-                    document.getElementById('assign-character-modal').style.display = 'none';
+                    // Update the completion count
+                    document.getElementById('completed-count').textContent = data.completed_count;
+
+                    // Update progress bar
+                    const totalCount = parseInt(document.getElementById('total-count').textContent);
+                    const progressBar = document.querySelector('.progress');
+                    if (totalCount > 0) {
+                        progressBar.style.width = (data.completed_count / totalCount * 100) + '%';
+                    }
                 }
             })
             .catch(error => console.error('Error:', error));
         });
-
-        // handle checkbox clicks with AJAX
-        document.querySelectorAll('.completion-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const subtitleId = this.dataset.subtitleId;
-
-                fetch('/subtitle/' + subtitleId + '/toggle_completion', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // update the row class based on completion status
-                        const row = document.getElementById('subtitle-row-' + subtitleId);
-                        if (data.is_completed) {
-                            row.classList.add('completed');
-                        } else {
-                            row.classList.remove('completed');
-                        }
-
-                        // update the completion count
-                        document.getElementById('completed-count').textContent = data.completed_count;
-
-                        // update progress bar
-                        const totalCount = parseInt(document.getElementById('total-count').textContent);
-                        const progressBar = document.querySelector('.progress');
-                        if (totalCount > 0) {
-                            progressBar.style.width = (data.completed_count / totalCount * 100) + '%';
-                        }
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-        });
+    });
     </script>
+
 {% endblock %}

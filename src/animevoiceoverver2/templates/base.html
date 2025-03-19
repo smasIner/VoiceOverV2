@@ -38,5 +38,40 @@
             <p>&copy; 2025 Anime VoiceOver. Project by Shaikhutdin</p>
         </div>
     </footer>
+<!-- Shared Delete Confirmation Modal -->
+<div id="delete-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('delete-modal').style.display='none'">&times;</span>
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete this <span id="delete-item-type">item</span>?</p>
+        <p class="item-name" id="delete-item-name"></p>
+        <p class="warning">This action cannot be undone.</p>
+        <div class="form-actions">
+            <button class="btn" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+            <form id="delete-form" action="" method="post" class="inline-form">
+                <button type="submit" class="btn delete">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(type, id, name, formAction) {
+        document.getElementById('delete-item-type').textContent = type;
+        document.getElementById('delete-item-name').textContent = name || '';
+        document.getElementById('delete-form').action = formAction || ('/' + type + '/delete/' + id);
+        document.getElementById('delete-modal').style.display = 'block';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const modals = document.getElementsByClassName('modal');
+        for (let i = 0; i < modals.length; i++) {
+            if (event.target == modals[i]) {
+                modals[i].style.display = 'none';
+            }
+        }
+    }
+</script>
 </body>
 </html>

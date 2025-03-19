@@ -513,7 +513,7 @@ def edit_character(id):
                            current_voice_actor_id=current_voice_actor_id, anime_id=anime_id)
 
 
-@app.route('/character/delete/<int:id>')
+@app.route('/character/delete/<int:id>', methods=['POST'])
 def delete_character(id):
     db = get_db()
     character = db.execute('SELECT anime_id FROM characters WHERE id = ?', [id]).fetchone()
@@ -724,14 +724,15 @@ def update_lines(episode_id, character_id, action):
     return redirect(url_for('episode_detail', episode_id=episode_id))
 
 
-@app.route('/episode/<int:episode_id>/remove_character/<int:character_id>')
+@app.route('/episode/<int:episode_id>/remove_character/<int:character_id>', methods=['POST'])
 def remove_character_from_episode(episode_id, character_id):
     db = get_db()
     db.execute('DELETE FROM episode_characters WHERE episode_id = ? AND character_id = ?',
                [episode_id, character_id])
     db.commit()
     flash('Character removed from episode!')
-    return redirect(url_for('episode_detail', episode_id=episode_id))
+    return redirect(url_for('episode_detail', episode_id=episode_id))  # Return JSON for fetch()
+
 
 
 @app.route('/episode/<int:episode_id>/add_character', methods=['POST'])
